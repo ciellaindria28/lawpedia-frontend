@@ -7,7 +7,7 @@ def login_view(request):
 
 
 def add_product(request):
-    return render(request, 'productform.html')
+    return render(request,'productform.html')
 
 def product_list(request):
     return render(request, 'productlist.html')
