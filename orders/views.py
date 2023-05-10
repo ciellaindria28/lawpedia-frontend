@@ -5,64 +5,126 @@ from rest_framework.response import Response
 from .models import Orders, ItemOrders
 from .serializers import OrdersSerializer, ItemOrdersSerializer
 from django.http import HttpRequest
+import requests
+import json
+
+LAWPEDIA_AUTH = 'http://localhost:8001/auth/user'
 
 @api_view(['GET'])
 def get_all_orders(request):
-    orders = Orders.objects.all()
-    orders_serialized = []
-    for order in orders:
-        serialized_order = OrdersSerializer(order).data
-        item_orders = ItemOrders.objects.filter(orders = order)
-        serialized_item_orders = ItemOrdersSerializer(item_orders, many = True)
-        serialized_order['products'] = serialized_item_orders.data
-        orders_serialized.append(serialized_order)
+    try:
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+    except:
+        return Response(data={"error": "No token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(LAWPEDIA_AUTH, headers=headers)
+    if response.status_code == 200:
+        response_body = json.loads(response.text)
+        username = response_body['data']['username']
+        orders = Orders.objects.filter(seller_username=username)
+        orders_serialized = []
+        for order in orders:
+            serialized_order = OrdersSerializer(order).data
+            item_orders = ItemOrders.objects.filter(orders = order)
+            serialized_item_orders = ItemOrdersSerializer(item_orders, many = True)
+            serialized_order['products'] = serialized_item_orders.data
+            orders_serialized.append(serialized_order)
         
-    # TODO: Give Token and Response 401 if token not valid
-    return Response(data=orders_serialized, status= status.HTTP_200_OK)
+        return Response(data=orders_serialized, status= status.HTTP_200_OK)
+    else:
+        return Response(data={"error": "Token not valid."}, status=status.HTTP_401_UNAUTHORIZED)
+        
 
 @api_view(['GET'])
 def get_order_by_id(request, order_id):
     try:
-        order = Orders.objects.get(id=order_id)
-        serialized_order = OrdersSerializer(order).data
-    
-        item_orders = ItemOrders.objects.filter(orders = order)
-        serialized_item_orders = ItemOrdersSerializer(item_orders, many = True)
-        serialized_order['products'] = serialized_item_orders.data
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+    except:
+        return Response(data={"error": "No token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(LAWPEDIA_AUTH, headers=headers)
+    if response.status_code == 200:
+        response_body = json.loads(response.text)
+        username = response_body['data']['username']
+        try:
+            order = Orders.objects.get(id=order_id)
+            order_buyer_username = order.buyer_username
+            order_seller_username = order.seller_username
+            
+            if username == order_buyer_username or username == order_seller_username:
+                serialized_order = OrdersSerializer(order).data
+                item_orders = ItemOrders.objects.filter(orders = order)
+                serialized_item_orders = ItemOrdersSerializer(item_orders, many = True)
+                serialized_order['products'] = serialized_item_orders.data
+                return Response(data=serialized_order, status=status.HTTP_200_OK)
+            else:
+                return Response(data={"error": "This is not your order."}, status=status.HTTP_403_FORBIDDEN)
+        except Orders.DoesNotExist:
+            return Response(data={"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
         
-        return Response(data=serialized_order, status=status.HTTP_200_OK)
-    except Orders.DoesNotExist:
-        return Response(data={"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
-    # TODO: Give Token and Response 401 if token not valid
+    else:
+        return Response(data={"error": "Token not valid."}, status=status.HTTP_401_UNAUTHORIZED)
     
 
 @api_view(['POST'])
 def update_order_status(request):
-    # TODO: Give Token and Response 401 if token not valid
-    # TODO: Give Token and Response 403 order not from logged in account
-    if request.data.get('id') == None or request.data.get('newStatus') == None:
-        return Response(data={"error": "There are missing parameters."}, status=status.HTTP_400_BAD_REQUEST)
     try:
-        order_id = request.data.get('id')
-        order = Orders.objects.get(id=order_id)
-        status_value = request.data.get('newStatus')
-        order.status_order = status_value
-        order.save()
-        serialized_order = OrdersSerializer(order)
-        return Response(data=serialized_order.data, status=status.HTTP_200_OK)
-    except Orders.DoesNotExist:
-        return Response(data={"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+    except:
+        return Response(data={"error": "No token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(LAWPEDIA_AUTH, headers=headers)
+    if response.status_code == 200:
+        response_body = json.loads(response.text)
+        username = response_body['data']['username']
+        
+        if request.data.get('id') == None or request.data.get('newStatus') == None:
+            return Response(data={"error": "There are missing parameters."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            order_id = request.data.get('id')
+            order = Orders.objects.get(id=order_id)
+            
+            if order.seller_username != username:
+                return Response(data={"error": "You don't have access to update this order."}, status=status.HTTP_403_FORBIDDEN)
+            
+            status_value = request.data.get('newStatus')
+            order.status_order = status_value
+            order.save()
+            serialized_order = OrdersSerializer(order)
+            return Response(data=serialized_order.data, status=status.HTTP_200_OK)
+        except Orders.DoesNotExist:
+            return Response(data={"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+    else:
+        return Response(data={"error": "Token not valid."}, status=status.HTTP_401_UNAUTHORIZED)
+    
+        
     
 
 @api_view(['POST'])
 def confirm_delivery(request):
-    # TODO: Give Token and Response 401 if token not valid
-    # TODO: Give Token and Response 403 order not from logged in account
+    try:
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+    except:
+        return Response(data={"error": "No token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(LAWPEDIA_AUTH, headers=headers)
+    username = ''
+    if response.status_code == 200:
+        response_body = json.loads(response.text)
+        username = response_body['data']['username']
+    else:
+         return Response(data={"error": "Token not valid."}, status=status.HTTP_401_UNAUTHORIZED)
+    
     if request.data.get('id') == None:
         return Response(data={"error": "There are missing parameters."}, status=status.HTTP_400_BAD_REQUEST)
     try:
         order_id = request.data.get('id')
         order = Orders.objects.get(id=order_id)
+        
+        if order.buyer_username != username:
+            return Response(data={"error": "You don't have access to confirm this delivery."}, status=status.HTTP_403_FORBIDDEN)
+            
         status_value = "delivered"
         order.status_order = status_value
         order.save()
@@ -75,13 +137,26 @@ def confirm_delivery(request):
 
 @api_view(['POST'])
 def checkout(request):
-    # TODO: Give Token and Response 401 if token not valid
-    # TODO: Give Token and Response 403 order not from logged in account
+    try:
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+    except:
+        return Response(data={"error": "No token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(LAWPEDIA_AUTH, headers=headers)
+    token_username = ''
+    if response.status_code == 200:
+        response_body = json.loads(response.text)
+        token_username = response_body['data']['username']
+    else:
+         return Response(data={"error": "Token not valid."}, status=status.HTTP_401_UNAUTHORIZED)
     
     if request.data.get('username') == None or request.data.get('cartProductsId') == None:
         return Response(data={"error": "There are missing parameters."}, status=status.HTTP_400_BAD_REQUEST)
     
     username = request.data['username']
+    if token_username != username:
+        return Response(data={"error": "You don't have access to checkout this order."}, status=status.HTTP_403_FORBIDDEN)
+    
     item_ids = request.data.get('cartProductsId', [])  # Retrieve the list of item IDs from the request data
     cart_products = []
 
@@ -90,7 +165,7 @@ def checkout(request):
         sub_request = HttpRequest()
         sub_request.method = 'GET'
         sub_request.GET['item_id'] = item_id
-        response = get_cart_products_by_id(sub_request, item_id)  # Call the get_cart_products_by_id function
+        response = get_cart_products_by_id(sub_request, item_id)  # TODO: Replace with real method
         
         if response.status_code == status.HTTP_200_OK:
             cart_product = response.data
@@ -106,7 +181,7 @@ def checkout(request):
         sub_request = HttpRequest()
         sub_request.method = 'GET'
         sub_request.GET['item_id'] = product_id
-        response = check_seller_product_stock_by_id(sub_request, product_id)
+        response = check_seller_product_stock_by_id(sub_request, product_id) # TODO: Replace with real method
         if response.status_code == status.HTTP_200_OK:
             product_from_seller = response.data
             if item['quantity'] <= product_from_seller['stok']:
@@ -139,7 +214,7 @@ def checkout(request):
     pay_request = HttpRequest()
     pay_request.method = 'POST'
     pay_request.data = pay_data
-    response = pay(pay_request)
+    response = pay(pay_request) # TODO: Replace with real method
     
     serialized_order = OrdersSerializer(order).data
     
