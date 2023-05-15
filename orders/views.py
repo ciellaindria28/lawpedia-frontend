@@ -9,6 +9,7 @@ import requests
 import json
 
 LAWPEDIA_AUTH = 'http://localhost:8001/auth/user'
+LAWPEDIA_PRODUCT = 'http://localhost:3000/products'
 
 @api_view(['GET'])
 def get_all_orders(request):
@@ -181,12 +182,15 @@ def checkout(request):
         sub_request = HttpRequest()
         sub_request.method = 'GET'
         sub_request.GET['item_id'] = product_id
-        response = check_seller_product_stock_by_id(sub_request, product_id) # TODO: Replace with real method
+        response = check_seller_product_stock_by_id(sub_request, product_id, token)
         if response.status_code == status.HTTP_200_OK:
             product_from_seller = response.data
-            if item['quantity'] <= product_from_seller['stok']:
+            if item['quantity'] <= product_from_seller['stock']:
                 item_orders.append([item['quantity'], product_from_seller])
                 total_price+= item['quantity'] * product_from_seller['price']
+                new_stock = product_from_seller['stock'] - item['quantity']
+                product_from_seller['stock'] = new_stock
+                requests.put(f"{LAWPEDIA_PRODUCT}/update/{product_id}", headers=headers, data=json.dumps(product_from_seller))  
             
     
     
@@ -254,35 +258,12 @@ def get_cart_products_by_id(request, item_id):
     return Response(data=data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-def check_seller_product_stock_by_id(request, item_id):
-    #TODO: DUMMY, remove soon when Kevin Done
-    if item_id == 1:
-        data = {"id" : 1, 
-                "username" : "trudy",
-                "name": "Product A", 
-                "price": 10000, 
-                "stok": 5, 
-                "description": "produk ini baru diupdate", 
-                "category": "Electronics" 
-                }  
-    elif item_id == 2:
-        data = {"id" : 2, 
-                "username" : "trudy",
-                "name": "Product B", 
-                "price": 20000, 
-                "stok": 5, 
-                "description": "produk ini baru diupdate", 
-                "category": "Electronics" 
-                }   
-    else :
-        data = {"id" : 3, 
-                "username" : "trudy",
-                "name": "Product C", 
-                "price": 30000, 
-                "stok": 1, 
-                "description": "produk ini baru diupdate", 
-                "category": "Electronics" 
-                }  
+def check_seller_product_stock_by_id(request, item_id, token):
+    
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get(f"{LAWPEDIA_PRODUCT}/{item_id}", headers=headers)
+    
+    data = json.loads(response.text)
     return Response(data=data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
