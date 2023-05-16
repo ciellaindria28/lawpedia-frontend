@@ -40,5 +40,6 @@ urlpatterns = [
          name='schema-swagger-ui'),  
     path('admin/', admin.site.urls),
     path('orders/', include('orders.urls')),
+    path('cart/', include('cart.urls')),
     path('', include('frontend.urls'))
 ]

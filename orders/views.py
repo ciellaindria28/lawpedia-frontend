@@ -7,6 +7,7 @@ from .serializers import OrdersSerializer, ItemOrdersSerializer
 from django.http import HttpRequest
 import requests
 import json
+from cart.views import get_cart_products_by_id
 
 LAWPEDIA_AUTH = 'http://localhost:8001/auth/user'
 LAWPEDIA_PRODUCT = 'http://localhost:3000/products'
@@ -166,7 +167,7 @@ def checkout(request):
         sub_request = HttpRequest()
         sub_request.method = 'GET'
         sub_request.GET['item_id'] = item_id
-        response = get_cart_products_by_id(sub_request, item_id)  # TODO: Replace with real method
+        response = get_cart_products_by_id(sub_request, item_id)
         
         if response.status_code == status.HTTP_200_OK:
             cart_product = response.data
@@ -231,31 +232,6 @@ def checkout(request):
 
 
 
-@api_view(['GET'])
-def get_cart_products_by_id(request, item_id):
-    #TODO: DUMMY, remove soon when ciella Done
-    if item_id == 1:
-        data = {"cartProductId": 1, 
-                "productId": 1, 
-                "quantity": 3,  
-                "buyerUsername": "alice", 
-                "sellerUsername": "trudy", 
-                } 
-    elif item_id == 2:
-        data = {"cartProductId": 2, 
-                "productId": 2, 
-                "quantity": 2,  
-                "buyerUsername": "alice", 
-                "sellerUsername": "trudy", 
-                } 
-    else :
-        data = {"cartProductId": 3, 
-                "productId": 3, 
-                "quantity": 4,  
-                "buyerUsername": "alice", 
-                "sellerUsername": "trudy", 
-                }
-    return Response(data=data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def check_seller_product_stock_by_id(request, item_id, token):
