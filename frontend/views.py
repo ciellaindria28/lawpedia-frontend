@@ -61,6 +61,13 @@ def logout(request):
         return redirect('frontend:login')
     
 def download_orders(request):
+    # verify user
+    try:
+        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+        if response.status_code == 401:
+            return redirect('frontend:login')
+    except:
+        return redirect('frontend:login')
     username = request.session.get('username')
     if username is None:
         return redirect('frontend:login')
@@ -103,8 +110,13 @@ def add_product(request):
     return render(request,'productform.html')
 
 def product_list(request):
-    username = request.session.get('username')
-    context = {'username': username}
+    try:
+        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+        if response.status_code == 401:
+            context = {'username': None}
+    except:
+        context = {'username': None}
+    context = {'username': request.session.get('username')}
     return render(request, 'productlist.html', context)
 
 def cart_view(request):

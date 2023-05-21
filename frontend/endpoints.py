@@ -6,6 +6,7 @@ BASE_AUTH_URL = 'http://localhost:8001'
 REGISTER_URL = BASE_AUTH_URL + '/auth/register'
 LOGIN_URL = BASE_AUTH_URL + '/auth/login'
 LOGOUT_URL = BASE_AUTH_URL + '/auth/logout'
+USER_CHECK_URL = BASE_AUTH_URL + '/auth/user'
 
 CREATE_PDF_URL = BASE_URL + '/download/orders'
 GET_PDF_LIST = BASE_URL + '/download/get_pdf_list'
