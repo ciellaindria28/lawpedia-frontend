@@ -3,6 +3,7 @@ import requests
 from .endpoints import *
 import json
 from django.http import HttpResponse
+from django.contrib import messages
 
 # Create your views here.
 
@@ -77,7 +78,6 @@ def download_orders(request):
     if response.status_code == 200:
         response_data = json.loads(response.text)
         pdf_list = response_data["data"]
-        print(pdf_list)
         context['pdfs'] = pdf_list
     return render(request, 'download_orders.html', context)
 
@@ -87,25 +87,12 @@ def generate_pdf(request):
     if response.status_code == 200:
         response_data = json.loads(response.text)
         message = response_data["data"]["message"]
-        context = {'success': message, 'username': request.session.get('username')}
-        return render(request, 'download_orders.html', context)
+        messages.success(request, message)
+        return redirect ('frontend:download_orders')
     else:
-        context = {'message': 'Something went wrong'}
+        context = {'failed': 'Something went wrong'}
         return render(request, 'download_orders.html', context)
     
-def download_pdf(request, pdf_id):
-    access_token = request.session.get('access_token')
-    response = requests.get(GET_PDF_RESULT_URL + f'?pdf_id={pdf_id}', headers={'Authorization': 'Bearer ' + access_token})
-    if response.status_code == 200:
-        # the response is a pdf file
-        pdf = response.content
-
-        # create a http response
-        response = HttpResponse(pdf, content_type='application/pdf')
-        return response
-    else:
-        context = {'message': 'Something went wrong'}
-        return render(request, 'download_orders.html', context)
 def add_product(request):
     return render(request,'productform.html')
 

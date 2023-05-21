@@ -13,6 +13,5 @@ urlpatterns = [
     path('orders', order_list, name='order_list'),
     path('download/orders', download_orders, name='download_orders'),
     path('generate/pdf', generate_pdf, name='generate_pdf'),
-    path('download/pdf/<int:pdf_id>', download_pdf, name='download_pdf'),
     
 ]
