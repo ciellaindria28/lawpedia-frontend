@@ -41,11 +41,14 @@ def login_view(request):
             response_data = json.loads(response.text)
             access_token = response_data["data"]["tokens"]["access"]
             refresh_token = response_data["data"]["tokens"]["refresh"]
+            role = response_data["data"]["role"]
             username = response_data["data"]["username"]
+
             request.session['access_token'] = access_token
             request.session['refresh_token'] = refresh_token
             request.session['username'] = username
-            return redirect('frontend:product_list')
+            request.session['role'] = role
+            return redirect('frontend:product_lists')
         context = {'message': 'Invalid credentials'}
         return render(request, 'login.html', context)
     
@@ -75,6 +78,11 @@ def download_orders(request):
     if username is None:
         return redirect('frontend:login')
     context = {'username': username}
+    context['role'] = request.session.get('role')
+    
+    if context['role'] == 1:
+        return redirect('frontend:product_lists')
+    
     access_token = request.session.get('access_token')
     response = requests.get(GET_PDF_LIST, headers={'Authorization': 'Bearer ' + access_token})
     if response.status_code == 200:
@@ -143,19 +151,7 @@ def add_product(request):
 
 
 def product_lists(request):
-    try:
-        products_response = requests.get(GET_ALL_PRODUCT_URL)
-        if products_response.status_code == 200:
-            products = products_response.json()
-            context = {'products': products}
-        else:
-            context = {'products': []}
-    except:
-        context = {'products': []}
-    
-    return render(request, 'productlist.html', context)
-
-def product_list(request):
+    context = {}
     try:
         response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
         if response.status_code == 401:
@@ -163,6 +159,18 @@ def product_list(request):
     except:
         context = {'username': None}
     context = {'username': request.session.get('username')}
+    context['role'] = request.session.get('role')
+    
+    try:
+        products_response = requests.get(GET_ALL_PRODUCT_URL)
+        if products_response.status_code == 200:
+            products = products_response.json()
+            context['products'] = products
+        else:
+            context['products'] = []
+    except:
+        context['products'] = []
+    
     return render(request, 'productlist.html', context)
 
 def cart_view(request):
