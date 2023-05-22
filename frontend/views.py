@@ -15,12 +15,13 @@ def register_view(request):
         email = request.POST.get('email')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
+        role = int(request.POST.get('role'))
         
         if password1 != password2:
             context = {'message': 'Passwords do not match'}
             return render(request, 'register.html', context)
         
-        response = requests.post(REGISTER_URL, data={'username': username, 'email': email, 'password1': password1, 'password2': password2})
+        response = requests.post(REGISTER_URL, data={'username': username, 'email': email, 'password1': password1, 'password2': password2, 'role': role})
         if response.status_code == 201:
             return redirect('frontend:login')
         context = {'message': 'Something went wrong'}
