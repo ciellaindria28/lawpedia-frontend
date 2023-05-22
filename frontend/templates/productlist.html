@@ -32,76 +32,38 @@
   </head>
   <body>
   {% include 'navbar.html' %}
-<main>
-
-  <section class="py-5 text-center container">
+  <main>
+    <section class="py-5 text-center container">
       <div class="col-lg-6 col-md-8 mx-auto">
         <h1 class="fw-light">All Products</h1>
       </div>
-  </section>
+    </section>
 
-  <div class="album py-5 bg-light">
-    <div class="container">
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-        <div class="col">
-            <div class="card shadow-sm">
-              <svg class="bd-placeholder-img card-img-top" width="100%" height="225"role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><text x="50%" y="50%" fill="#eceeef" dy=".3em">Thumbnail</text></svg>
-              <div class="card-body">
-                  <h5>Gentle woman totebag</h5>
-                  <h6>Rp 150.000</h6>
-                  <h7  class="text-muted">Bag</h7>
-                <p class="card-text">This charming floral handbag features a bold and vibrant floral design on its exterior. The bag is made from durable and high-quality materials, making it the perfect accessory for everyday use or special occasions. </p>
-                <div class="d-flex justify-content-between align-items-center">
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Add to cart</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Buy</button>
+    <div class="album py-5 bg-light">
+      <div class="container">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+          {% for product in products %}
+            <div class="col">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h5>{{ product.name }}</h5>
+                  <h6>Rp {{ product.price }}</h6>
+                  <h7 class="text-muted">{{ product.category }}</h7>
+                  <p class="card-text">{{ product.description }}</p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-sm btn-outline-secondary">Add to cart</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary">Buy</button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-
-        <div class="col">
-          <div class="card shadow-sm">
-            <svg class="bd-placeholder-img card-img-top" width="100%" height="225"role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><text x="50%" y="50%" fill="#eceeef" dy=".3em">Thumbnail</text></svg>
-            <div class="card-body">
-                <h5>Floral handbag</h5>
-                <h6>Rp 50.000</h6>
-                <h7  class="text-muted">Bag</h7>
-              <p class="card-text">This charming floral handbag features a bold and vibrant floral design on its exterior. The bag is made from durable and high-quality materials, making it the perfect accessory for everyday use or special occasions. </p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary">Add to cart</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary">Buy</button>
-                </div>
-              </div>
-            </div>
-          </div>
+          {% endfor %}
         </div>
-        
-       <div class="col">
-          <div class="card shadow-sm">
-            <svg class="bd-placeholder-img card-img-top" width="100%" height="225"role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><text x="50%" y="50%" fill="#eceeef" dy=".3em">Thumbnail</text></svg>
-            <div class="card-body">
-                <h5>Modern backpack</h5>
-                <h6>Rp 400.000</h6>
-                <h7  class="text-muted">Bag</h7>
-              <p class="card-text">This charming floral handbag features a bold and vibrant floral design on its exterior. The bag is made from durable and high-quality materials, making it the perfect accessory for everyday use or special occasions. </p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary">Add to cart</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary">Buy</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-       
       </div>
     </div>
-  </div>
-
-</main>
+  </main>
 
 <footer class="text-muted py-5">
   <div class="container">

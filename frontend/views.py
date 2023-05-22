@@ -94,7 +94,64 @@ def generate_pdf(request):
         return render(request, 'download_orders.html', context)
     
 def add_product(request):
-    return render(request,'productform.html')
+    if request.method == 'POST':
+        try:
+            response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+            if response.status_code == 401:
+                context = {'username': None}
+            else:
+                user_data = response.json()
+                if user_data.get('role') == 2:  # Check if the user has role == 2 (seller)
+                    username = request.session.get('username')
+                    name = request.POST.get('name')
+                    price = request.POST.get('price')
+                    stock = request.POST.get('stock')
+                    description = request.POST.get('description')
+                    category = request.POST.get('category')
+
+                    # Prepare the request data
+                    data = {
+                        'username': username,
+                        'name': name,
+                        'price': price,
+                        'stock': stock,
+                        'description': description,
+                        'category': category
+                    }
+
+                    # Send the POST request to create a product
+                    response = requests.post(CREATE_PRODUCT_URL, data=data)
+
+                    # Check the response status code
+                    if response.status_code == 201:
+                        # Product created successfully
+                        context = {'username': request.session.get('username')}
+                    else:
+                        # Error occurred while creating the product
+                        context = {'username': None}
+                else:
+                    # User does not have the required role
+                    context = {'username': None}
+        except:
+            context = {'username': None}
+    else:
+        context = {'username': request.session.get('username')}
+    
+    return render(request, 'productform.html', context)
+
+
+def product_lists(request):
+    try:
+        products_response = requests.get(GET_ALL_PRODUCT_URL)
+        if products_response.status_code == 200:
+            products = products_response.json()
+            context = {'products': products}
+        else:
+            context = {'products': []}
+    except:
+        context = {'products': []}
+    
+    return render(request, 'productlist.html', context)
 
 def product_list(request):
     try:
