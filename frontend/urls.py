@@ -9,7 +9,6 @@ urlpatterns = [
     path('logout', logout, name='logout'),
     path('products/create', add_product, name='addproduct'),
     path('products', product_lists, name='product_lists'),
-    path('cart/all', cart_view, name='cart'),
     path('add_to_cart', add_to_cart, name='add_to_cart'),
     path('products', product_list, name='product_list'),
     path('cart/all', cart_view, name='cart_view'),

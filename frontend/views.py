@@ -231,43 +231,31 @@ def add_to_cart(request):
         error_message = "Failed to add product. Please try again."
         return JsonResponse({'error': error_message}, status=400)
 
-def order_by_id(request):
-    try:
-        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
-        if response.status_code == 401:
-            return redirect('frontend:login')
-    except:
-        return redirect('frontend:login')
-    username = request.session.get('username')
-    if username is None:
-        return redirect('frontend:login')
-    context = {'buyer_username': username}
-    access_token = request.session.get('access_token')
-    response = requests.get(ORDER_URL, headers={'Authorization': 'Bearer ' + access_token})
-    if response.status_code == 200:
-        response_data = json.loads(response.text)
-        order_list = response_data["data"]
-        context['order_list'] = order_list
-    return render(request, 'order_list.html', context)
-
-
 def checkout(request):
     selected_cart_ids = request.POST.getlist('selectedCartIds')
     print(selected_cart_ids)  # Print the selected cart IDs
     try:
-        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
-        if response.status_code == 401:
-            return redirect('frontend:login')
+            response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+            if response.status_code == 401:
+                return redirect('frontend:login')
     except:
-        return redirect('frontend:login')
+            return redirect('frontend:login')
     username = request.session.get('username')
     if username is None:
         return redirect('frontend:login')
     access_token = request.session.get('access_token')
-    response = requests.put(ADD_PRODUCT_URL, data={'cartId': cart_id, 'quantity': int(quantity)}, headers={'Authorization': 'Bearer ' + access_token})
+    response = requests.post(CHECKOUT_ORDER_URL, data={'username': username, 'cartProductsId':selected_cart_ids}, headers={'Authorization': 'Bearer ' + access_token})
     if response.status_code == 200:
+        response_data = json.loads(response.text)
+        order_id = response_data['id']
+        print("masuk")
+        print(order_id)
         return redirect('frontend:cart_view')
     else:
-        error_message = "Failed to update quantity. Please try again."
+        error_message = "Failed to checkout product. Please try again."
         return JsonResponse({'error': error_message}, status=400)
 
+
+
+  
+  
