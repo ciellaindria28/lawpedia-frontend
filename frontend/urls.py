@@ -4,6 +4,7 @@ from .views import *
 app_name = "frontend"
 
 urlpatterns = [
+    path('', product_lists, name='home'),
     path('register', register_view, name='register'),
     path('login', login_view, name='login'),
     path('logout', logout, name='logout'),
