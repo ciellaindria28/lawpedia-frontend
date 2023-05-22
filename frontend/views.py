@@ -1,8 +1,9 @@
+from re import L
 from django.shortcuts import render, redirect
 import requests
 from .endpoints import *
 import json
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 from django.contrib import messages
 
 # Create your views here.
@@ -165,10 +166,108 @@ def product_list(request):
     return render(request, 'productlist.html', context)
 
 def cart_view(request):
-    return render(request, 'cart_view.html')
+    try:
+        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+        if response.status_code == 401:
+            return redirect('frontend:login')
+    except:
+        return redirect('frontend:login')
+    username = request.session.get('username')
+    if username is None:
+        return redirect('frontend:login')
+    context = {'buyer_username': username}
+    access_token = request.session.get('access_token')
+    response = requests.get(CART_URL, headers={'Authorization': 'Bearer ' + access_token})
+    print(response.status_code)
+    if response.status_code == 200:
+        response_data = json.loads(response.text)
+        print(response_data)
+        cart_list = response_data
+        print(cart_list) 
+        context['cart_list'] = cart_list
+    return render(request, 'carts.html', context)
 
-def order_list(request):
-    return render(request, 'order_list.html')
+def update_quantity(request):
+    if request.method == 'POST':
+        cart_id = request.POST.get('cartId')
+        quantity = int(request.POST.get('quantity'))
+    try:
+        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+        if response.status_code == 401:
+            return redirect('frontend:login')
+    except:
+        return redirect('frontend:login')
+    username = request.session.get('username')
+    if username is None:
+        return redirect('frontend:login')
+    access_token = request.session.get('access_token')
+    response = requests.put(UPDATE_QUANTITY_URL, data={'cartId': cart_id, 'quantity': int(quantity)}, headers={'Authorization': 'Bearer ' + access_token})
+    if response.status_code == 200:
+        return redirect('frontend:cart_view')
+    else:
+        error_message = "Failed to update quantity. Please try again."
+        return JsonResponse({'error': error_message}, status=400)
 
-def order_detail(request):
-    return render(request, 'order_detail.html')
+def add_to_cart(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('id')
+        # productName = request.POST.get('productName')
+        # price = request.POST.get('price')
+    try:
+            response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+            if response.status_code == 401:
+                return redirect('frontend:login')
+    except:
+            return redirect('frontend:login')
+    username = request.session.get('username')
+    if username is None:
+        return redirect('frontend:login')
+    access_token = request.session.get('access_token')
+    quantity = 1
+    response = requests.post(ADD_PRODUCT_URL, data={'productId': product_id, 'quantity':int(quantity)}, headers={'Authorization': 'Bearer ' + access_token})
+    if response.status_code == 200:
+        return redirect('frontend:cart_view')
+    else:
+        error_message = "Failed to add product. Please try again."
+        return JsonResponse({'error': error_message}, status=400)
+
+def order_by_id(request):
+    try:
+        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+        if response.status_code == 401:
+            return redirect('frontend:login')
+    except:
+        return redirect('frontend:login')
+    username = request.session.get('username')
+    if username is None:
+        return redirect('frontend:login')
+    context = {'buyer_username': username}
+    access_token = request.session.get('access_token')
+    response = requests.get(ORDER_URL, headers={'Authorization': 'Bearer ' + access_token})
+    if response.status_code == 200:
+        response_data = json.loads(response.text)
+        order_list = response_data["data"]
+        context['order_list'] = order_list
+    return render(request, 'order_list.html', context)
+
+
+def checkout(request):
+    selected_cart_ids = request.POST.getlist('selectedCartIds')
+    print(selected_cart_ids)  # Print the selected cart IDs
+    try:
+        response = requests.get(USER_CHECK_URL, headers={'Authorization': 'Bearer ' + request.session.get('access_token')})
+        if response.status_code == 401:
+            return redirect('frontend:login')
+    except:
+        return redirect('frontend:login')
+    username = request.session.get('username')
+    if username is None:
+        return redirect('frontend:login')
+    access_token = request.session.get('access_token')
+    response = requests.put(ADD_PRODUCT_URL, data={'cartId': cart_id, 'quantity': int(quantity)}, headers={'Authorization': 'Bearer ' + access_token})
+    if response.status_code == 200:
+        return redirect('frontend:cart_view')
+    else:
+        error_message = "Failed to update quantity. Please try again."
+        return JsonResponse({'error': error_message}, status=400)
+
