@@ -1,5 +1,5 @@
 # change this to the url of the backend server
-BASE_URL = "https://lawpedia-frontend-i6pjjcb5oq-et.a.run.app"
+BASE_URL = "https://lawpedia-i6pjjcb5oq-et.a.run.app"
 BASE_AUTH_URL = "https://lawpedia-auth-i6pjjcb5oq-et.a.run.app"
 BASE_PRODUCT_URL = "https://lawpedia-product-i6pjjcb5oq-et.a.run.app"
 BASE_CART_ORDER_URL = "https://lawpedia-i6pjjcb5oq-et.a.run.app"
